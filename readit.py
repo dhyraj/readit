@@ -96,7 +96,11 @@ class Readit:
         redditUrl = self.getRedditUrlForPostsAfter()
         return self.getSubmissions(redditUrl=redditUrl, limit=limit)
     
-    def getSubmissions(self, redditUrl: str = None,size: int = 3, limit: int = 1000):
+    def getSubmissions(self, redditUrl: str = None, size: int = 3, limit: int = 1000):
+        
+        if limit <= 0:
+            return None
+        
         timeOfRequest = time.time_ns()
         print(f"url ({timeOfRequest}): {redditUrl}")
         response = requests.get(redditUrl, verify= True)
@@ -138,6 +142,28 @@ class Readit:
                     # continue
                     nextToken = post.attrs['more-posts-cursor']
         return nextToken, posts
+
+    def getFullPostLinks(posts, fullUrl=False):
+        urlToPostMap = {}
+        for post in posts:
+            fullPostTag= post.find("a", {"slot": 'full-post-link'})
+            if not fullUrl:
+                if fullPostTag is not None and fullPostTag.attrs is not None:
+                    if fullPostTag.attrs['href'] is not None:
+                        urlToPostMap[fullPostTag.attrs['href']] = post
+                    elif post is not None and post.attrs is not None and post.attrs["permalink"]:
+                        urlToPostMap[post.attrs["permalink"]] = post
+                    else:
+                        print("No post url found at all :(")
+            else:
+                urlToPostMap[post.attrs["content-href"]] = post
+        return urlToPostMap
+
+class RedditCommentGrabber:
+    def __init__(self, postUrl:str = None) -> None:
+        self.postUrl = postUrl
+    
+    
 
 
 
